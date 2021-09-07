@@ -232,7 +232,7 @@ class Player(SimpleModule):
         segment_request.add_media_mpd(navigate_mpd(self.parsed_mpd, 'media')[1])
         segment_request.add_segment_id(self.segment_id)
 
-        self.segment_id += 1
+        self.segment_id += 4
 
         # set status to downloading a segment
         self.already_downloading = True

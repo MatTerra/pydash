@@ -43,10 +43,24 @@ class R2AMaxPossible(IR2A):
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
         self.request_time = time.perf_counter()
-        self.qi_to_select = self.select_qi(0, len(self.qi), self.last_throughput) 
+        self.qi_to_select = self.select_qi(0, len(self.qi), self.last_throughput)
+        buffer = self.whiteboard.get_playback_buffer_size() or [(0, 60)]
 
+        buffer_size = buffer[-1][1]
+        adj = 3
+        for i in range(1, 6):
+            if buffer_size < 10*i:
+                break
+            adj -= 2
 
-        print(f"last_troughput is {self.last_throughput}\nand selected qi is {self.qi[self.qi_to_select]}")
+        print(f"last_troughput is {self.last_throughput}\nand selected qi is {self.qi_to_select}\nand buffer_size is {buffer_size}")
+
+        self.qi_to_select = self.qi_to_select - adj \
+            if self.qi_to_select - adj > 0 \
+            else 0
+        if self.qi_to_select - adj >= len(self.qi):
+            self.qi_to_select = len(self.qi) - 1
+
         msg.add_quality_id(self.qi[self.qi_to_select])
         self.send_down(msg)
 
