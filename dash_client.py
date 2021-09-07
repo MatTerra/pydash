@@ -43,7 +43,6 @@ class DashClient:
         self.modules.append(self.r2a)
         self.modules.append(self.connection_handler)
 
-
     def run_application(self):
         self.modules_initialization()
 
@@ -53,17 +52,13 @@ class DashClient:
 
         self.modules_finalization()
 
-
     def handle_scheduler_event(self, event):
-
         #checking if the event is inside of the modules position range limits
         if event.get_dst() < 0 or event.get_dst() >= len(self.modules):
             print(f'It is no possible to route a {event.get_msg()} message from {event.get_src()} to {event.get_dst()} module list position.')
             exit(0)
 
         self.modules[event.get_dst()].handle_message(event.get_msg())
-
-
 
     def modules_initialization(self):
         print('Initialization modules phase.')
