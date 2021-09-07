@@ -15,6 +15,7 @@ on the last package throughput.
 
 from player.parser import *
 from r2a.ir2a import IR2A
+import time
 
 
 class R2AMaxPossible(IR2A):
@@ -25,6 +26,7 @@ class R2AMaxPossible(IR2A):
         self.qi = []
         self.last_throughput = 0
         self.qi_to_select = len(self.qi) - 1
+        self.request_time = 0
 
     def handle_xml_request(self, msg):
         self.send_down(msg)
@@ -40,17 +42,33 @@ class R2AMaxPossible(IR2A):
 
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
-        last_downloaded_size = self.qi[self.qi_to_select]
-        self.last_throughput = last_downloaded_size / self.time_to_download
+        self.request_time = time.perf_counter()
         print(f"last_troughput is {self.last_throughput}")
-        msg.add_quality_id(self.qi[19])
+
+        msg.add_quality_id(self.qi[self.select_qi(0, len(self.qi), self.last_throughput)])
         self.send_down(msg)
 
     def handle_segment_size_response(self, msg):
         self.send_up(msg)
+        last_downloaded_size = self.qi[self.qi_to_select]
+        self.last_throughput = last_downloaded_size / (time.perf_counter() - self.request_time)
 
     def initialize(self):
         pass
 
     def finalization(self):
         pass
+
+    def select_qi(self, l, r, x):
+        if r >= l:
+            mid = l + (r - l) // 2
+            if self.qi[mid] == x:
+                return mid
+            elif self.qi[mid] > x:
+                return self.select_qi(l, mid - 1, x)
+            else:
+                if self.qi[mid + 1] > x:
+                    return mid
+                return self.select_qi(mid + 1, r, x)
+        else:
+            return -1
