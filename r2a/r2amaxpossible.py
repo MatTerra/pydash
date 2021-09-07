@@ -43,13 +43,16 @@ class R2AMaxPossible(IR2A):
     def handle_segment_size_request(self, msg):
         # time to define the segment quality choose to make the request
         self.request_time = time.perf_counter()
-        print(f"last_troughput is {self.last_throughput}")
+        self.qi_to_select = self.select_qi(0, len(self.qi), self.last_throughput) 
 
-        msg.add_quality_id(self.qi[self.select_qi(0, len(self.qi), self.last_throughput)])
+
+        print(f"last_troughput is {self.last_throughput}\nand selected qi is {self.qi[self.qi_to_select]}")
+        msg.add_quality_id(self.qi[self.qi_to_select])
         self.send_down(msg)
 
     def handle_segment_size_response(self, msg):
         self.send_up(msg)
+        print(f"qi_to_select: {self.qi_to_select}")
         last_downloaded_size = self.qi[self.qi_to_select]
         self.last_throughput = last_downloaded_size / (time.perf_counter() - self.request_time)
 
@@ -67,7 +70,7 @@ class R2AMaxPossible(IR2A):
             elif self.qi[mid] > x:
                 return self.select_qi(l, mid - 1, x)
             else:
-                if self.qi[mid + 1] > x:
+                if len(self.qi) == mid + 1 or self.qi[mid + 1] > x:
                     return mid
                 return self.select_qi(mid + 1, r, x)
         else:
