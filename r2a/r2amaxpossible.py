@@ -47,18 +47,18 @@ class R2AMaxPossible(IR2A):
         buffer = self.whiteboard.get_playback_buffer_size() or [(0, 60)]
 
         buffer_size = buffer[-1][1]
-        adj = 3
+        buffer_penalty = self.base_penalty
         for i in range(1, 6):
             if buffer_size < 10*i:
                 break
-            adj -= 2
+            buffer_penalty -= self.penalty_decrement
 
         print(f"last_troughput is {self.last_throughput}\nand selected qi is {self.qi_to_select}\nand buffer_size is {buffer_size}")
 
-        self.qi_to_select = self.qi_to_select - adj \
-            if self.qi_to_select - adj > 0 \
+        self.qi_to_select = self.qi_to_select - buffer_penalty \
+            if self.qi_to_select - buffer_penalty > 0 \
             else 0
-        if self.qi_to_select - adj >= len(self.qi):
+        if self.qi_to_select - buffer_penalty >= len(self.qi):
             self.qi_to_select = len(self.qi) - 1
 
         msg.add_quality_id(self.qi[self.qi_to_select])
@@ -71,6 +71,8 @@ class R2AMaxPossible(IR2A):
         self.last_throughput = last_downloaded_size / (time.perf_counter() - self.request_time)
 
     def initialize(self):
+        self.base_penalty = 3
+        self.penalty_decrement = 1
         pass
 
     def finalization(self):
